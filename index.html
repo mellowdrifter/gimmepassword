@@ -4,55 +4,129 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Password Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #f9fafb;
+      --card-bg: white;
+      --accent: #2563eb;
+      --accent-hover: #1e40af;
+      --text: #111827;
+      --border: #e5e7eb;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      background-color: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 50px;
+      padding: 2rem;
     }
+
+    .container {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
     #password {
-      font-size: 1.5em;
-      margin: 20px 0;
+      font-size: 1.2rem;
       word-break: break-word;
+      padding: 0.75rem;
+      background: #f3f4f6;
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      min-height: 2.5rem;
     }
-    label { margin: 5px 0; }
-    input[type="number"] { width: 60px; }
+
     button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 1em;
+      font-family: inherit;
+      font-size: 1rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    label {
+      display: block;
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      padding: 0.25rem;
+      font-family: inherit;
+      font-size: 1rem;
+    }
+
+    .options {
+      margin-top: 1rem;
+    }
+if (includeLimitedSpecial) chars += '#$%*!';
+    @media (max-width: 480px) {
+      .container {
+        padding: 1rem;
+      }
+
+      button {
+        width: 100%;
+        margin: 0.5rem 0;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Random Password Generator</h1>
-  <div id="password"></div>
-  <button onclick="copyToClipboard()">Copy to Clipboard</button>
-  <button onclick="generatePassword()">Generate New Password</button>
+  <div class="container">
+    <h1>Password Generator</h1>
+    <div id="password"></div>
+    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button onclick="generatePassword()">Generate New Password</button>
 
-  <div style="margin-top: 20px;">
-    <label>
-      Length:
-      <input type="number" id="length" value="32" min="1">
-    </label><br>
-    <label><input type="checkbox" id="includeLower" checked> Include lowercase</label><br>
-    <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label><br>
-    <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label><br>
-    <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label><br>
-    <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*! only)</label><br>
+    <div class="options">
+      <label>
+        Length:
+        <input type="number" id="length" value="32" min="1">
+      </label>
+      <label><input type="checkbox" id="includeLower" checked> Include lowercase</label>
+      <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label>
+      <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label>
+      <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label>
+      <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*! only)</label><br>
+    </div>
   </div>
 
   <script>
     function generatePassword() {
-      let length = parseInt(document.getElementById('length').value);
-      if (isNaN(length) || length < 1) length = 32;
+      const length = parseInt(document.getElementById('length').value);
       const includeLower = document.getElementById('includeLower').checked;
       const includeUpper = document.getElementById('includeUpper').checked;
       const includeNumbers = document.getElementById('includeNumbers').checked;
       const includeSpecial = document.getElementById('includeSpecial').checked;
-      const includeLimitedSpecial = document.getElementById('includeLimitedSpecial');
+       const includeLimitedSpecial = document.getElementById('includeLimitedSpecial');
 
       let chars = '';
       if (includeLower) chars += 'abcdefghijklmnopqrstuvwxyz';
@@ -74,21 +148,17 @@
       document.getElementById('password').innerText = password;
     }
 
-function copyToClipboard() {
-  const text = document.getElementById('password').innerText;
-  if (!text || text.includes('Please select')) return;
+    function copyToClipboard() {
+      const text = document.getElementById('password').innerText;
+      if (!text || text.includes('Please select')) return;
 
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector('button[onclick="copyToClipboard()"]');
-    const originalText = btn.innerText;
-    btn.innerText = "Copied!";
-    setTimeout(() => { btn.innerText = originalText; }, 1000);
-  }).catch(err => {
-    console.error('Clipboard copy failed:', err);
-  });
-}
+      navigator.clipboard.writeText(text).catch(err => {
+        console.error('Clipboard copy failed:', err);
+      });
+    }
 
     window.onload = generatePassword;
   </script>
 </body>
 </html>
+
