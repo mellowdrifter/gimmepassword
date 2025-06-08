@@ -187,22 +187,32 @@
       lengthValue.innerText = lengthSlider.value;
     }
 
-    function evaluateStrength(password, opts) {
-      let score = 0;
-      if (opts.includeLower) score++;
-      if (opts.includeUpper) score++;
-      if (opts.includeNumbers) score++;
-      if (opts.includeSpecial || opts.includeLimitedSpecial) score++;
-      if (password.length >= 12) score++;
-      return score;
+
+   function evaluateStrength(password) {
+     const length = password.length;
+
+    let charsetSize = 0;
+    if (/[a-z]/.test(password)) charsetSize += 26;
+    if (/[A-Z]/.test(password)) charsetSize += 26;
+    if (/[0-9]/.test(password)) charsetSize += 10;
+    if (/[^a-zA-Z0-9]/.test(password)) charsetSize += 32; // Approx special chars
+
+    const entropy = Math.log2(Math.pow(charsetSize, length));
+
+    if (entropy < 28) return { level: 1, label: "Very Weak" };
+    if (entropy < 36) return { level: 2, label: "Weak" };
+    if (entropy < 60) return { level: 3, label: "Moderate" };
+    if (entropy < 100) return { level: 4, label: "Strong" };
+    return { level: 5, label: "Very Strong" };
+  }
+
+
+    function updateStrengthBar(password) {
+      const { level, label } = evaluateStrength(password);
+      strengthBar.setAttribute("data-level", level);
+      strengthLabel.innerText = `Strength: ${label}`;
     }
 
-    function updateStrengthBar(password, opts) {
-      const score = evaluateStrength(password, opts);
-      strengthBar.setAttribute("data-level", score);
-      const levels = ["—", "Very Weak", "Weak", "Moderate", "Strong", "Very Strong"];
-      strengthLabel.innerText = `Strength: ${levels[score] || "—"}`;
-    }
 
     function generatePassword() {
       const length = parseInt(lengthSlider.value);
