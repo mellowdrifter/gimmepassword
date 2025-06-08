@@ -37,7 +37,7 @@
 
     h1 {
       font-size: 1.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
       text-align: center;
     }
 
@@ -48,9 +48,37 @@
       background: #f3f4f6;
       border: 1px solid var(--border);
       border-radius: 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
       text-align: center;
       min-height: 2.5rem;
+    }
+
+    .strength {
+      height: 8px;
+      border-radius: 4px;
+      margin: 0.3rem 0;
+      background-color: #e5e7eb;
+    }
+
+    .strength[data-level="1"] { background-color: #dc2626; }
+    .strength[data-level="2"] { background-color: #f97316; }
+    .strength[data-level="3"] { background-color: #eab308; }
+    .strength[data-level="4"] { background-color: #3b82f6; }
+    .strength[data-level="5"] { background-color: #10b981; }
+
+    .strength-label {
+      font-size: 0.85rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #4b5563;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
     }
 
     button {
@@ -61,7 +89,6 @@
       border: none;
       border-radius: 0.5rem;
       padding: 0.5rem 1rem;
-      margin: 0.25rem;
       cursor: pointer;
       transition: background 0.2s ease;
     }
@@ -114,7 +141,6 @@
 
       button {
         width: 100%;
-        margin: 0.5rem 0;
       }
     }
   </style>
@@ -123,9 +149,15 @@
   <div class="container">
     <h1>Password Generator</h1>
     <div id="password">...</div>
-    <button onclick="copyToClipboard()">Copy to Clipboard</button>
+
+    <div class="strength" id="strengthBar" data-level="0"></div>
+    <div class="strength-label" id="strengthLabel">Strength: —</div>
+
+    <div class="buttons">
+      <button onclick="copyToClipboard()">Copy</button>
+      <button onclick="generatePassword()">Generate New</button>
+    </div>
     <div id="copyMsg" class="copy-feedback">Copied!</div>
-    <button onclick="generatePassword()">Generate New Password</button>
 
     <div class="options">
       <div class="slider-container">
@@ -147,9 +179,29 @@
     const lengthSlider = document.getElementById('length');
     const lengthValue = document.getElementById('lengthValue');
     const copyMsg = document.getElementById('copyMsg');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const strengthBar = document.getElementById('strengthBar');
+    const strengthLabel = document.getElementById('strengthLabel');
 
     function updateLengthLabel() {
       lengthValue.innerText = lengthSlider.value;
+    }
+
+    function evaluateStrength(password, opts) {
+      let score = 0;
+      if (opts.includeLower) score++;
+      if (opts.includeUpper) score++;
+      if (opts.includeNumbers) score++;
+      if (opts.includeSpecial || opts.includeLimitedSpecial) score++;
+      if (password.length >= 12) score++;
+      return score;
+    }
+
+    function updateStrengthBar(password, opts) {
+      const score = evaluateStrength(password, opts);
+      strengthBar.setAttribute("data-level", score);
+      const levels = ["—", "Very Weak", "Weak", "Moderate", "Strong", "Very Strong"];
+      strengthLabel.innerText = `Strength: ${levels[score] || "—"}`;
     }
 
     function generatePassword() {
@@ -167,8 +219,11 @@
       if (includeSpecial) chars += '!@#$%^&*()-_=+[]{}|;:,.<>?/';
       if (includeLimitedSpecial) chars += '#$%*!';
 
+      const passwordDisplay = document.getElementById('password');
+
       if (!chars) {
-        document.getElementById('password').innerText = 'Please select at least one character type.';
+        passwordDisplay.innerText = 'Please select at least one character type.';
+        updateStrengthBar('', {});
         return;
       }
 
@@ -177,7 +232,14 @@
         password += chars.charAt(Math.floor(Math.random() * chars.length));
       }
 
-      document.getElementById('password').innerText = password;
+      passwordDisplay.innerText = password;
+      updateStrengthBar(password, {
+        includeLower,
+        includeUpper,
+        includeNumbers,
+        includeSpecial,
+        includeLimitedSpecial
+      });
     }
 
     function copyToClipboard() {
@@ -194,14 +256,19 @@
       });
     }
 
+    lengthSlider.addEventListener('input', () => {
+      updateLengthLabel();
+      generatePassword();
+    });
+
+    checkboxes.forEach(cb => {
+      cb.addEventListener('change', generatePassword);
+    });
+
     window.onload = () => {
       updateLengthLabel();
       generatePassword();
     };
-
-    lengthSlider.addEventListener('input', () => {
-      updateLengthLabel();
-    });
   </script>
 </body>
 </html>
