@@ -108,7 +108,7 @@
 <body>
   <div class="container">
     <h1>Password Generator</h1>
-    <div id="password"></div>
+    <div id="password">...</div>
     <button onclick="copyToClipboard()">Copy to Clipboard</button>
     <button onclick="generatePassword()">Generate New Password</button>
 
@@ -117,7 +117,7 @@
         <label for="length">Length:
           <span id="lengthValue" class="slider-value">32</span>
         </label>
-        <input type="range" id="length" min="8" max="128" value="32" oninput="updateLengthLabel()">
+        <input type="range" id="length" min="8" max="128" value="32">
       </div>
 
       <label><input type="checkbox" id="includeLower" checked> Include lowercase</label>
@@ -129,13 +129,15 @@
   </div>
 
   <script>
+    const lengthSlider = document.getElementById('length');
+    const lengthValue = document.getElementById('lengthValue');
+
     function updateLengthLabel() {
-      const length = document.getElementById('length').value;
-      document.getElementById('lengthValue').innerText = length;
+      lengthValue.innerText = lengthSlider.value;
     }
 
     function generatePassword() {
-      const length = parseInt(document.getElementById('length').value);
+      const length = parseInt(lengthSlider.value);
       const includeLower = document.getElementById('includeLower').checked;
       const includeUpper = document.getElementById('includeUpper').checked;
       const includeNumbers = document.getElementById('includeNumbers').checked;
@@ -163,4 +165,23 @@
     }
 
     function copyToClipboard() {
-      const text = document.getElementById('password').inner
+      const text = document.getElementById('password').innerText;
+      if (!text || text.includes('Please select')) return;
+
+      navigator.clipboard.writeText(text).catch(err => {
+        console.error('Clipboard copy failed:', err);
+      });
+    }
+
+    // Attach event listeners
+    window.onload = () => {
+      updateLengthLabel();
+      generatePassword();
+    };
+
+    lengthSlider.addEventListener('input', () => {
+      updateLengthLabel();
+    });
+  </script>
+</body>
+</html>
