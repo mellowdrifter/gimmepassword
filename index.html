@@ -5,168 +5,73 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Password Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
   <style>
-    :root {
-      --bg: #f9fafb;
-      --card-bg: white;
-      --accent: #2563eb;
-      --accent-hover: #1e40af;
-      --text: #111827;
-      --border: #e5e7eb;
-    }
-
     body {
-      margin: 0;
       font-family: 'JetBrains Mono', monospace;
-      background-color: var(--bg);
-      color: var(--text);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem;
+      padding: 20px;
+      background: #f9f9f9;
+      color: #333;
     }
-
-    .container {
-      background: var(--card-bg);
-      padding: 2rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      width: 100%;
-      max-width: 500px;
-    }
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
-
+    h1 { margin-bottom: 10px; }
     #password {
-      font-size: 1.2rem;
+      font-size: 1.5em;
       word-break: break-word;
-      padding: 0.75rem;
-      background: #f3f4f6;
-      border: 1px solid var(--border);
-      border-radius: 0.5rem;
-      margin-bottom: 0.5rem;
-      text-align: center;
-      min-height: 2.5rem;
+      background: #eee;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+      min-height: 1.5em;
     }
-
-    .strength {
-      height: 8px;
-      border-radius: 4px;
-      margin: 0.3rem 0;
-      background-color: #e5e7eb;
+    .strength, .strength-label, .crack-time, .feedback {
+      margin: 5px 0;
+      font-size: 0.9em;
     }
-
-    .strength[data-level="1"] { background-color: #dc2626; }
-    .strength[data-level="2"] { background-color: #f97316; }
-    .strength[data-level="3"] { background-color: #eab308; }
-    .strength[data-level="4"] { background-color: #3b82f6; }
-    .strength[data-level="5"] { background-color: #10b981; }
-
-    .strength-label {
-      font-size: 0.85rem;
-      text-align: center;
-      margin-bottom: 1rem;
-      color: #4b5563;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 0.5rem;
-    }
-
+    .strength[data-level="1"] { color: red; }
+    .strength[data-level="2"] { color: orange; }
+    .strength[data-level="3"] { color: goldenrod; }
+    .strength[data-level="4"] { color: green; }
+    .strength[data-level="5"] { color: darkgreen; }
     button {
-      font-family: inherit;
-      font-size: 1rem;
-      background: var(--accent);
-      color: white;
-      border: none;
-      border-radius: 0.5rem;
-      padding: 0.5rem 1rem;
-      cursor: pointer;
-      transition: background 0.2s ease;
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
     }
-
-    button:hover {
-      background: var(--accent-hover);
-    }
-
-    label {
-      display: block;
-      margin: 0.5rem 0;
-      font-size: 0.95rem;
-    }
-
-    .options {
-      margin-top: 1rem;
-    }
-
-    .slider-container {
-      margin: 1rem 0;
-    }
-
-    .slider-value {
-      font-weight: bold;
-      margin-left: 0.5rem;
-    }
-
-    input[type="range"] {
-      width: 100%;
-    }
-
-    .copy-feedback {
-      margin-top: 0.5rem;
-      color: green;
-      font-size: 0.9rem;
+    .slider-container { margin: 10px 0; }
+    #copyMsg {
       opacity: 0;
-      transition: opacity 0.3s ease;
-      text-align: center;
-      height: 1.2rem;
+      transition: opacity 0.4s;
+      font-size: 0.9em;
+      color: green;
     }
-
-    .copy-feedback.show {
-      opacity: 1;
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 1rem;
-      }
-
-      button {
-        width: 100%;
-      }
-    }
+    #copyMsg.show { opacity: 1; }
+    label { display: block; margin-top: 5px; }
+    input[type="range"] { width: 100%; max-width: 300px; }
+    .slider-value { font-weight: bold; }
+    .container { max-width: 400px; width: 100%; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Password Generator</h1>
-    <div id="password">...</div>
-
-    <div class="strength" id="strengthBar" data-level="0"></div>
+    <div id="password"></div>
     <div class="strength-label" id="strengthLabel">Strength: —</div>
-
-    <div class="buttons">
+    <div class="strength" id="strengthBar" data-level="0"></div>
+    <div class="crack-time" id="crackTime">Crack Time: —</div>
+    <div class="feedback" id="feedback">Suggestions: —</div>
+    <div>
       <button onclick="copyToClipboard()">Copy</button>
       <button onclick="generatePassword()">Generate New</button>
+      <div id="copyMsg">Copied!</div>
     </div>
-    <div id="copyMsg" class="copy-feedback">Copied!</div>
-
     <div class="options">
       <div class="slider-container">
-        <label for="length">Length:
-          <span id="lengthValue" class="slider-value">32</span>
-        </label>
+        <label>Length: <span id="lengthValue" class="slider-value">32</span></label>
         <input type="range" id="length" min="8" max="128" value="32">
       </div>
-
       <label><input type="checkbox" id="includeLower" checked> Include lowercase</label>
       <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label>
       <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label>
@@ -178,91 +83,65 @@
   <script>
     const lengthSlider = document.getElementById('length');
     const lengthValue = document.getElementById('lengthValue');
-    const copyMsg = document.getElementById('copyMsg');
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
     const strengthBar = document.getElementById('strengthBar');
     const strengthLabel = document.getElementById('strengthLabel');
+    const crackTime = document.getElementById('crackTime');
+    const feedback = document.getElementById('feedback');
+    const copyMsg = document.getElementById('copyMsg');
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
 
     function updateLengthLabel() {
       lengthValue.innerText = lengthSlider.value;
     }
 
-
-   function evaluateStrength(password) {
-     const length = password.length;
-
-    let charsetSize = 0;
-    if (/[a-z]/.test(password)) charsetSize += 26;
-    if (/[A-Z]/.test(password)) charsetSize += 26;
-    if (/[0-9]/.test(password)) charsetSize += 10;
-    if (/[^a-zA-Z0-9]/.test(password)) charsetSize += 32; // Approx special chars
-
-    const entropy = Math.log2(Math.pow(charsetSize, length));
-
-    if (entropy < 28) return { level: 1, label: "Very Weak" };
-    if (entropy < 36) return { level: 2, label: "Weak" };
-    if (entropy < 60) return { level: 3, label: "Moderate" };
-    if (entropy < 100) return { level: 4, label: "Strong" };
-    return { level: 5, label: "Very Strong" };
-  }
-
-
-    function updateStrengthBar(password) {
-      const { level, label } = evaluateStrength(password);
-      strengthBar.setAttribute("data-level", level);
-      strengthLabel.innerText = `Strength: ${label}`;
-    }
-
-
-    function generatePassword() {
-      const length = parseInt(lengthSlider.value);
-      const includeLower = document.getElementById('includeLower').checked;
-      const includeUpper = document.getElementById('includeUpper').checked;
-      const includeNumbers = document.getElementById('includeNumbers').checked;
-      const includeSpecial = document.getElementById('includeSpecial').checked;
-      const includeLimitedSpecial = document.getElementById('includeLimitedSpecial').checked;
-
-      let chars = '';
-      if (includeLower) chars += 'abcdefghijklmnopqrstuvwxyz';
-      if (includeUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      if (includeNumbers) chars += '0123456789';
-      if (includeSpecial) chars += '!@#$%^&*()-_=+[]{}|;:,.<>?/';
-      if (includeLimitedSpecial) chars += '#$%*!';
-
-      const passwordDisplay = document.getElementById('password');
-
-      if (!chars) {
-        passwordDisplay.innerText = 'Please select at least one character type.';
-        updateStrengthBar('', {});
+    function updateStrength(password) {
+      if (!password || password.includes("Please select")) {
+        strengthBar.setAttribute("data-level", 0);
+        strengthLabel.innerText = "Strength: —";
+        crackTime.innerText = "Crack Time: —";
+        feedback.innerText = "Suggestions: —";
         return;
       }
 
-      let password = '';
-      for (let i = 0; i < length; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
+      const result = zxcvbn(password);
+      const level = result.score + 1;
+      const label = ["Very Weak", "Weak", "Moderate", "Strong", "Very Strong"][result.score];
+      strengthBar.setAttribute("data-level", level);
+      strengthLabel.innerText = `Strength: ${label}`;
+      crackTime.innerText = `Crack Time: ${result.crack_times_display.offline_slow_hashing_1e4_per_second}`;
+      feedback.innerText = result.feedback.suggestions.length
+        ? `Suggestions: ${result.feedback.suggestions.join(" ")}`
+        : "Suggestions: None";
+    }
 
-      passwordDisplay.innerText = password;
-      updateStrengthBar(password, {
-        includeLower,
-        includeUpper,
-        includeNumbers,
-        includeSpecial,
-        includeLimitedSpecial
-      });
+    function generatePassword() {
+      const length = +lengthSlider.value;
+      let chars = '';
+      if (document.getElementById('includeLower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if (document.getElementById('includeUpper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if (document.getElementById('includeNumbers').checked) chars += '0123456789';
+      if (document.getElementById('includeSpecial').checked) chars += '!@#$%^&*()-_=+[]{}|;:,.<>?/';
+      if (document.getElementById('includeLimitedSpecial').checked) chars += '#$%*!';
+      const pwdElt = document.getElementById('password');
+      if (!chars) {
+        pwdElt.innerText = 'Please select at least one character type.';
+        updateStrength('');
+        return;
+      }
+      let pw = '';
+      for (let i = 0; i < length; i++) {
+        pw += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      pwdElt.innerText = pw;
+      updateStrength(pw);
     }
 
     function copyToClipboard() {
       const text = document.getElementById('password').innerText;
       if (!text || text.includes('Please select')) return;
-
       navigator.clipboard.writeText(text).then(() => {
         copyMsg.classList.add('show');
-        setTimeout(() => {
-          copyMsg.classList.remove('show');
-        }, 1500);
-      }).catch(err => {
-        console.error('Clipboard copy failed:', err);
+        setTimeout(() => copyMsg.classList.remove('show'), 1500);
       });
     }
 
@@ -270,11 +149,7 @@
       updateLengthLabel();
       generatePassword();
     });
-
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', generatePassword);
-    });
-
+    checkboxes.forEach(cb => cb.addEventListener('change', generatePassword));
     window.onload = () => {
       updateLengthLabel();
       generatePassword();
