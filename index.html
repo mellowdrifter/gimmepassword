@@ -76,17 +76,23 @@
       font-size: 0.95rem;
     }
 
-    input[type="number"] {
-      width: 60px;
-      padding: 0.25rem;
-      font-family: inherit;
-      font-size: 1rem;
-    }
-
     .options {
       margin-top: 1rem;
     }
-if (includeLimitedSpecial) chars += '#$%*!';
+
+    .slider-container {
+      margin: 1rem 0;
+    }
+
+    .slider-value {
+      font-weight: bold;
+      margin-left: 0.5rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
     @media (max-width: 480px) {
       .container {
         padding: 1rem;
@@ -107,26 +113,34 @@ if (includeLimitedSpecial) chars += '#$%*!';
     <button onclick="generatePassword()">Generate New Password</button>
 
     <div class="options">
-      <label>
-        Length:
-        <input type="number" id="length" value="32" min="1">
-      </label>
+      <div class="slider-container">
+        <label for="length">Length:
+          <span id="lengthValue" class="slider-value">32</span>
+        </label>
+        <input type="range" id="length" min="8" max="128" value="32" oninput="updateLengthLabel()">
+      </div>
+
       <label><input type="checkbox" id="includeLower" checked> Include lowercase</label>
       <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label>
       <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label>
       <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label>
-      <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*! only)</label><br>
+      <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*!)</label>
     </div>
   </div>
 
   <script>
+    function updateLengthLabel() {
+      const length = document.getElementById('length').value;
+      document.getElementById('lengthValue').innerText = length;
+    }
+
     function generatePassword() {
       const length = parseInt(document.getElementById('length').value);
       const includeLower = document.getElementById('includeLower').checked;
       const includeUpper = document.getElementById('includeUpper').checked;
       const includeNumbers = document.getElementById('includeNumbers').checked;
       const includeSpecial = document.getElementById('includeSpecial').checked;
-       const includeLimitedSpecial = document.getElementById('includeLimitedSpecial');
+      const includeLimitedSpecial = document.getElementById('includeLimitedSpecial').checked;
 
       let chars = '';
       if (includeLower) chars += 'abcdefghijklmnopqrstuvwxyz';
@@ -149,16 +163,4 @@ if (includeLimitedSpecial) chars += '#$%*!';
     }
 
     function copyToClipboard() {
-      const text = document.getElementById('password').innerText;
-      if (!text || text.includes('Please select')) return;
-
-      navigator.clipboard.writeText(text).catch(err => {
-        console.error('Clipboard copy failed:', err);
-      });
-    }
-
-    window.onload = generatePassword;
-  </script>
-</body>
-</html>
-
+      const text = document.getElementById('password').inner
