@@ -4,156 +4,226 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Password Generator</title>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/zxcvbn/4.4.2/zxcvbn.js"></script>
   <style>
     body {
+      margin: 0;
+      padding: 0;
       font-family: 'JetBrains Mono', monospace;
+      background: #f0f2f5;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 20px;
-      background: #f9f9f9;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: white;
+      padding: 2em;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.4em;
+      text-align: center;
+    }
+
+    #password {
+      font-size: 1.2em;
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 6px;
+      word-break: break-word;
+      min-height: 1.5em;
+      text-align: center;
+    }
+
+    .controls {
+      margin-top: 1em;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 8px 14px;
+      font-size: 1em;
+      border: none;
+      border-radius: 6px;
+      background: #3f51b5;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2c3e90;
+    }
+
+    #copyMsg {
+      font-size: 0.85em;
+      color: green;
+      text-align: center;
+      margin-top: 5px;
+      opacity: 0;
+      transition: opacity 0.4s ease-in-out;
+    }
+
+    #copyMsg.show {
+      opacity: 1;
+    }
+
+    .slider-container {
+      margin-top: 1em;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9em;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    label {
+      display: block;
+      margin-top: 0.5em;
+      font-size: 0.9em;
+    }
+
+    .strength-bar {
+      height: 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      background: #ccc;
+    }
+
+    .strength-bar[data-score="0"] { background: #e53935; }
+    .strength-bar[data-score="1"] { background: #fb8c00; }
+    .strength-bar[data-score="2"] { background: #fdd835; }
+    .strength-bar[data-score="3"] { background: #43a047; }
+    .strength-bar[data-score="4"] { background: #1b5e20; }
+
+    .info {
+      margin-top: 0.8em;
+      font-size: 0.85em;
       color: #333;
     }
-    h1 { margin-bottom: 10px; }
-    #password {
-      font-size: 1.5em;
-      word-break: break-word;
-      background: #eee;
-      padding: 10px 15px;
-      border-radius: 5px;
-      margin: 10px 0;
-      min-height: 1.5em;
+
+    .feedback {
+      margin-top: 0.4em;
+      font-size: 0.85em;
+      color: #555;
     }
-    .strength, .strength-label, .crack-time, .feedback {
-      margin: 5px 0;
-      font-size: 0.9em;
-    }
-    .strength[data-level="1"] { color: red; }
-    .strength[data-level="2"] { color: orange; }
-    .strength[data-level="3"] { color: goldenrod; }
-    .strength[data-level="4"] { color: green; }
-    .strength[data-level="5"] { color: darkgreen; }
-    button {
-      margin: 5px;
-      padding: 10px 20px;
-      font-size: 1em;
-    }
-    .slider-container { margin: 10px 0; }
-    #copyMsg {
-      opacity: 0;
-      transition: opacity 0.4s;
-      font-size: 0.9em;
-      color: green;
-    }
-    #copyMsg.show { opacity: 1; }
-    label { display: block; margin-top: 5px; }
-    input[type="range"] { width: 100%; max-width: 300px; }
-    .slider-value { font-weight: bold; }
-    .container { max-width: 400px; width: 100%; }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="card">
     <h1>Password Generator</h1>
-    <div id="password"></div>
-    <div class="strength-label" id="strengthLabel">Strength: —</div>
-    <div class="strength" id="strengthBar" data-level="0"></div>
-    <div class="crack-time" id="crackTime">Crack Time: —</div>
-    <div class="feedback" id="feedback">Suggestions: —</div>
-    <div>
+    <div id="password">—</div>
+    <div class="controls">
       <button onclick="copyToClipboard()">Copy</button>
       <button onclick="generatePassword()">Generate New</button>
-      <div id="copyMsg">Copied!</div>
     </div>
-    <div class="options">
-      <div class="slider-container">
-        <label>Length: <span id="lengthValue" class="slider-value">32</span></label>
-        <input type="range" id="length" min="8" max="128" value="32">
+    <div id="copyMsg">Copied!</div>
+
+    <div class="slider-container">
+      <div class="slider-label">
+        <span>Length:</span>
+        <span id="lengthValue">32</span>
       </div>
-      <label><input type="checkbox" id="includeLower" checked> Include lowercase</label>
-      <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label>
-      <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label>
-      <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label>
-      <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*!)</label>
+      <input type="range" id="length" min="8" max="128" value="32">
     </div>
+
+    <label><input type="checkbox" id="includeLower" checked> Include lowercase</label>
+    <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label>
+    <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label>
+    <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label>
+    <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*!)</label>
+
+    <div class="strength-bar" id="strengthBar" data-score="0"></div>
+    <div class="info" id="crackTime">Crack Time: —</div>
+    <div class="feedback" id="feedback">Suggestions: —</div>
   </div>
 
   <script>
-    const lengthSlider = document.getElementById('length');
-    const lengthValue = document.getElementById('lengthValue');
-    const strengthBar = document.getElementById('strengthBar');
-    const strengthLabel = document.getElementById('strengthLabel');
-    const crackTime = document.getElementById('crackTime');
-    const feedback = document.getElementById('feedback');
-    const copyMsg = document.getElementById('copyMsg');
-    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    const passwordEl = document.getElementById("password");
+    const lengthSlider = document.getElementById("length");
+    const lengthValue = document.getElementById("lengthValue");
+    const copyMsg = document.getElementById("copyMsg");
+    const strengthBar = document.getElementById("strengthBar");
+    const crackTimeEl = document.getElementById("crackTime");
+    const feedbackEl = document.getElementById("feedback");
+
+    const checkboxes = document.querySelectorAll("input[type='checkbox']");
 
     function updateLengthLabel() {
-      lengthValue.innerText = lengthSlider.value;
+      lengthValue.textContent = lengthSlider.value;
     }
 
     function updateStrength(password) {
-      if (!password || password.includes("Please select")) {
-        strengthBar.setAttribute("data-level", 0);
-        strengthLabel.innerText = "Strength: —";
-        crackTime.innerText = "Crack Time: —";
-        feedback.innerText = "Suggestions: —";
-        return;
-      }
-
       const result = zxcvbn(password);
-      const level = result.score + 1;
-      const label = ["Very Weak", "Weak", "Moderate", "Strong", "Very Strong"][result.score];
-      strengthBar.setAttribute("data-level", level);
-      strengthLabel.innerText = `Strength: ${label}`;
-      crackTime.innerText = `Crack Time: ${result.crack_times_display.offline_slow_hashing_1e4_per_second}`;
-      feedback.innerText = result.feedback.suggestions.length
+      const score = result.score;
+      strengthBar.setAttribute("data-score", score);
+      crackTimeEl.textContent = `Crack Time: ${result.crack_times_display.offline_slow_hashing_1e4_per_second}`;
+      feedbackEl.textContent = result.feedback.suggestions.length > 0
         ? `Suggestions: ${result.feedback.suggestions.join(" ")}`
         : "Suggestions: None";
     }
 
     function generatePassword() {
-      const length = +lengthSlider.value;
-      let chars = '';
-      if (document.getElementById('includeLower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
-      if (document.getElementById('includeUpper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      if (document.getElementById('includeNumbers').checked) chars += '0123456789';
-      if (document.getElementById('includeSpecial').checked) chars += '!@#$%^&*()-_=+[]{}|;:,.<>?/';
-      if (document.getElementById('includeLimitedSpecial').checked) chars += '#$%*!';
-      const pwdElt = document.getElementById('password');
+      const length = parseInt(lengthSlider.value);
+      let chars = "";
+      if (document.getElementById("includeLower").checked) chars += "abcdefghijklmnopqrstuvwxyz";
+      if (document.getElementById("includeUpper").checked) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      if (document.getElementById("includeNumbers").checked) chars += "0123456789";
+      if (document.getElementById("includeSpecial").checked) chars += "!@#$%^&*()-_=+[]{}|;:,.<>?/";
+      if (document.getElementById("includeLimitedSpecial").checked) chars += "#$%*!";
+
       if (!chars) {
-        pwdElt.innerText = 'Please select at least one character type.';
-        updateStrength('');
+        passwordEl.textContent = "Please select at least one character set.";
+        updateStrength("");
         return;
       }
-      let pw = '';
+
+      let password = "";
       for (let i = 0; i < length; i++) {
-        pw += chars.charAt(Math.floor(Math.random() * chars.length));
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      pwdElt.innerText = pw;
-      updateStrength(pw);
+
+      passwordEl.textContent = password;
+      updateStrength(password);
     }
 
     function copyToClipboard() {
-      const text = document.getElementById('password').innerText;
-      if (!text || text.includes('Please select')) return;
+      const text = passwordEl.textContent;
+      if (!text || text.includes("Please select")) return;
+
       navigator.clipboard.writeText(text).then(() => {
-        copyMsg.classList.add('show');
-        setTimeout(() => copyMsg.classList.remove('show'), 1500);
+        copyMsg.classList.add("show");
+        setTimeout(() => copyMsg.classList.remove("show"), 1500);
       });
     }
 
-    lengthSlider.addEventListener('input', () => {
-      updateLengthLabel();
-      generatePassword();
-    });
-    checkboxes.forEach(cb => cb.addEventListener('change', generatePassword));
+    // Event Listeners
     window.onload = () => {
       updateLengthLabel();
       generatePassword();
     };
+
+    lengthSlider.addEventListener("input", () => {
+      updateLengthLabel();
+      generatePassword();
+    });
+
+    checkboxes.forEach(cb => cb.addEventListener("change", generatePassword));
   </script>
 </body>
 </html>
