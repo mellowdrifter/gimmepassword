@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Password Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 50px;
+    }
+    #password {
+      font-size: 1.5em;
+      margin: 20px 0;
+      word-break: break-word;
+    }
+    label { margin: 5px 0; }
+    input[type="number"] { width: 60px; }
+    button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Random Password Generator</h1>
+  <div id="password"></div>
+  <button onclick="copyToClipboard()">Copy to Clipboard</button>
+  <button onclick="generatePassword()">Generate New Password</button>
+
+  <div style="margin-top: 20px;">
+    <label>
+      Length:
+      <input type="number" id="length" value="24" min="1">
+    </label><br>
+    <label><input type="checkbox" id="includeLower" checked> Include lowercase</label><br>
+    <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label><br>
+    <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label><br>
+    <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label><br>
+  </div>
+
+  <script>
+    function generatePassword() {
+      const length = parseInt(document.getElementById('length').value) || 24;
+      const includeLower = document.getElementById('includeLower').checked;
+      const includeUpper = document.getElementById('includeUpper').checked;
+      const includeNumbers = document.getElementById('includeNumbers').checked;
+      const includeSpecial = document.getElementById('includeSpecial').checked;
+
+      let chars = '';
+      if (includeLower) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if (includeUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if (includeNumbers) chars += '0123456789';
+      if (includeSpecial) chars += '!@#$%^&*()-_=+[]{}|;:,.<>?/';
+
+      if (!chars) {
+        document.getElementById('password').innerText = 'Please select at least one character type.';
+        return;
+      }
+
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      document.getElementById('password').innerText = password;
+    }
+
+    function copyToClipboard() {
+      const text = document.getElementById('password').innerText;
+      if (!text || text.includes('Please select')) return;
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Password copied to clipboard!');
+      }).catch(err => {
+        alert('Failed to copy password: ' + err);
+      });
+    }
+
+    window.onload = generatePassword;
+  </script>
+</body>
+</html>
