@@ -76,11 +76,9 @@
       const text = document.getElementById('password').innerText;
       if (!text || text.includes('Please select')) return;
 
-      navigator.clipboard.writeText(text).then(() => {
-        alert('Password copied to clipboard!');
-      }).catch(err => {
-        alert('Failed to copy password: ' + err);
-      });
+    navigator.clipboard.writeText(text).catch(err => {
+      console.error('Clipboard copy failed:', err);
+    });
     }
 
     window.onload = generatePassword;
