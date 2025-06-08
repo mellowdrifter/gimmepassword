@@ -41,11 +41,13 @@
     <label><input type="checkbox" id="includeUpper" checked> Include uppercase</label><br>
     <label><input type="checkbox" id="includeNumbers" checked> Include numbers</label><br>
     <label><input type="checkbox" id="includeSpecial" checked> Include special characters</label><br>
+    <label><input type="checkbox" id="includeLimitedSpecial"> Include limited special characters (#$%*! only)</label><br>
   </div>
 
   <script>
     function generatePassword() {
-      const length = parseInt(document.getElementById('length').value) || 32;
+      let length = parseInt(document.getElementById('length').value);
+      if (isNaN(length) || length < 1) length = 32;
       const includeLower = document.getElementById('includeLower').checked;
       const includeUpper = document.getElementById('includeUpper').checked;
       const includeNumbers = document.getElementById('includeNumbers').checked;
@@ -72,14 +74,19 @@
       document.getElementById('password').innerText = password;
     }
 
-    function copyToClipboard() {
-      const text = document.getElementById('password').innerText;
-      if (!text || text.includes('Please select')) return;
+function copyToClipboard() {
+  const text = document.getElementById('password').innerText;
+  if (!text || text.includes('Please select')) return;
 
-    navigator.clipboard.writeText(text).catch(err => {
-      console.error('Clipboard copy failed:', err);
-    });
-    }
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('button[onclick="copyToClipboard()"]');
+    const originalText = btn.innerText;
+    btn.innerText = "Copied!";
+    setTimeout(() => { btn.innerText = originalText; }, 1000);
+  }).catch(err => {
+    console.error('Clipboard copy failed:', err);
+  });
+}
 
     window.onload = generatePassword;
   </script>
